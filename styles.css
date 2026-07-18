@@ -1,0 +1,870 @@
+/* styles.css - CSS Design System for Chess.com Clone */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-primary: #151412;
+  --bg-secondary: #21201d;
+  --bg-tertiary: #272522;
+  --bg-hover: #32312d;
+  --accent: #769656;
+  --accent-hover: #86a865;
+  --gold: #e5b83b;
+  --text-main: #f1f1f1;
+  --text-muted: #9c9a96;
+  --border-light: rgba(255, 255, 255, 0.08);
+  --board-light: #eeeed2;
+  --board-dark: #769656;
+  --shadow-main: 0 8px 30px rgba(0, 0, 0, 0.5);
+  
+  /* Move classifications colors */
+  --color-best: #95b83c;
+  --color-excellent: #5c8bb0;
+  --color-good: #769656;
+  --color-book: #d5a021;
+  --color-mistake: #e67e22;
+  --color-blunder: #b03a2e;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* App Container Layout */
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  width: 240px;
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  z-index: 100;
+  transition: width 0.3s ease;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  padding: 0 8px;
+}
+
+.logo-container i {
+  color: var(--accent);
+  font-size: 28px;
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #fff 40%, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+}
+
+.nav-item button {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.nav-item button i {
+  font-size: 20px;
+}
+
+.nav-item button:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.nav-item.active button {
+  background-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(118, 150, 86, 0.3);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px 8px;
+}
+
+.mute-btn {
+  background: none;
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.mute-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+/* Main Workspace Panel */
+.workspace {
+  flex: 1;
+  display: flex;
+  padding: 24px;
+  gap: 24px;
+  overflow: hidden;
+}
+
+.view-container {
+  display: none;
+  width: 100%;
+  height: 100%;
+  gap: 24px;
+}
+
+.view-container.active {
+  display: flex;
+}
+
+/* Chess Board and Eval Area */
+.board-area {
+  flex: 1.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  max-height: 100%;
+  position: relative;
+}
+
+/* Live Evaluation Bar */
+.eval-bar-container {
+  width: 24px;
+  height: 100%;
+  max-height: calc(min(80vh, 80vw));
+  background-color: #312e2b;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-main);
+}
+
+.eval-bar-white {
+  width: 100%;
+  background-color: #ffffff;
+  height: 50%;
+  transition: height 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.eval-score-text {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.eval-score-text.score-white {
+  top: 6px;
+  color: #312e2b;
+}
+
+.eval-score-text.score-black {
+  bottom: 6px;
+  color: #ffffff;
+}
+
+/* Chessboard Rendering Styles */
+.chessboard-container {
+  width: 100%;
+  max-width: calc(min(80vh, 80vw));
+  aspect-ratio: 1 / 1;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-main);
+  position: relative;
+}
+
+.chessboard-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.board-square {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.board-square.light-sq {
+  background-color: var(--board-light);
+}
+
+.board-square.dark-sq {
+  background-color: var(--board-dark);
+}
+
+/* Pieces Styling */
+.chess-piece {
+  width: 100%;
+  height: 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: grab;
+  z-index: 2;
+  transition: transform 0.1s ease;
+}
+
+.chess-piece:active {
+  cursor: grabbing;
+}
+
+/* Ghost Piece for Dragging */
+.chessboard-drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Square Highlight Modifiers */
+.selected-sq {
+  background-color: rgba(247, 247, 105, 0.6) !important;
+}
+
+.last-move-sq {
+  background-color: rgba(247, 247, 105, 0.35) !important;
+}
+
+.check-sq {
+  background: radial-gradient(circle, rgba(235, 64, 52, 0.9) 0%, rgba(235, 64, 52, 0.2) 70%) !important;
+  animation: check-pulse 1.5s infinite;
+}
+
+@keyframes check-pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 0.5; }
+  100% { opacity: 0.8; }
+}
+
+/* Valid Move Preview Indicators */
+.valid-move-indicator {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.move-dot {
+  width: 24%;
+  height: 24%;
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 50%;
+  left: 38%;
+  top: 38%;
+}
+
+.valid-capture-sq::before {
+  content: "";
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  border: 5px solid rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+  top: 10%;
+  left: 10%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* SVG Overlay for arrows/circles */
+.chessboard-svg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Sidebar Dashboard Controls */
+.control-panel {
+  flex: 0.8;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-main);
+  max-height: 100%;
+}
+
+.panel-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--bg-tertiary);
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-light);
+  background-color: var(--bg-tertiary);
+  display: flex;
+  gap: 12px;
+}
+
+/* Buttons and Form Elements */
+.btn {
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  border: none;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+
+/* Moves Log Styles */
+.move-history-container {
+  flex: 1;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background-color: var(--bg-tertiary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 180px;
+}
+
+.history-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--bg-secondary);
+}
+
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr;
+  padding: 6px 16px;
+  align-items: center;
+}
+
+.history-row:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.015);
+}
+
+.history-num {
+  color: var(--text-muted);
+}
+
+.history-move {
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+}
+
+.history-move:hover {
+  background-color: var(--bg-hover);
+}
+
+.history-move.active-move {
+  background-color: rgba(118, 150, 86, 0.25);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* Classification Badge for Moves */
+.move-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.badge-best { background-color: var(--color-best); }
+.badge-excellent { background-color: var(--color-excellent); }
+.badge-good { background-color: var(--color-good); }
+.badge-book { background-color: var(--color-book); }
+.badge-mistake { background-color: var(--color-mistake); }
+.badge-blunder { background-color: var(--color-blunder); }
+
+/* Difficulty Selector / Levels */
+.level-selector {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.level-option {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  padding: 10px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.level-option:hover {
+  border-color: var(--text-muted);
+  color: var(--text-main);
+}
+
+.level-option.active {
+  background-color: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* Training list (Puzzles/Openings/Endgames grid) */
+.cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.training-card {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.training-card:hover {
+  background-color: var(--bg-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.card-details h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.card-details p {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.card-meta {
+  text-align: right;
+}
+
+.badge-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+.badge-tag.difficulty-green {
+  background-color: rgba(118, 150, 86, 0.15);
+  color: var(--accent);
+}
+
+.badge-tag.difficulty-gold {
+  background-color: rgba(229, 184, 59, 0.15);
+  color: var(--gold);
+}
+
+/* Mode-specific guides */
+.guide-box {
+  background-color: rgba(118, 150, 86, 0.1);
+  border-left: 4px solid var(--accent);
+  padding: 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.game-state-banner {
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 15px;
+}
+
+.banner-win { background-color: rgba(118, 150, 86, 0.2); border: 1px solid var(--accent); color: #fff; }
+.banner-loss { background-color: rgba(176, 58, 46, 0.2); border: 1px solid var(--color-blunder); color: #fff; }
+.banner-draw { background-color: rgba(156, 154, 150, 0.2); border: 1px solid var(--text-muted); color: #fff; }
+
+/* Dashboard Rating Widget */
+.rating-widget {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.rating-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-top: 4px;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 440px;
+  padding: 24px;
+  box-shadow: var(--shadow-main);
+  animation: modal-zoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modal-zoom {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-body {
+  margin-bottom: 24px;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Promotion Modal */
+.promotion-choices {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.promotion-choice {
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  aspect-ratio: 1;
+  cursor: pointer;
+  background-size: 80%;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: all 0.2s ease;
+}
+
+.promotion-choice:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--gold);
+  transform: scale(1.05);
+}
+
+/* Layout switches & responsiveness */
+@media (max-width: 900px) {
+  body {
+    flex-direction: column;
+    overflow-y: auto;
+    height: auto;
+  }
+  
+  .app-container {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 16px;
+    height: 64px;
+    border-bottom: 1px solid var(--border-light);
+    border-right: none;
+    justify-content: space-between;
+  }
+  
+  .logo-container {
+    margin-bottom: 0;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .nav-menu {
+    flex-direction: row;
+    gap: 4px;
+  }
+  
+  .nav-item button {
+    padding: 8px 12px;
+    font-size: 14px;
+    gap: 8px;
+  }
+  
+  .nav-item button span {
+    display: none; /* Icon only on tablets/phones */
+  }
+  
+  .sidebar-footer {
+    display: none;
+  }
+  
+  .workspace {
+    flex-direction: column;
+    padding: 12px;
+    gap: 16px;
+    height: auto;
+    overflow: visible;
+  }
+  
+  .view-container {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .board-area {
+    width: 100%;
+  }
+  
+  .chessboard-container {
+    max-width: 100%;
+  }
+  
+  .eval-bar-container {
+    height: calc(min(100vw, 500px));
+  }
+  
+  .control-panel {
+    width: 100%;
+    max-height: none;
+  }
+}
+
+/* Learning Aids Styling */
+.hanging-sq {
+  background: radial-gradient(circle, rgba(245, 155, 34, 0.45) 0%, rgba(245, 155, 34, 0.1) 75%) !important;
+  box-shadow: inset 0 0 12px rgba(245, 155, 34, 0.7) !important;
+}
+
+.space-control-w {
+  background-color: rgba(59, 134, 161, 0.12) !important;
+  box-shadow: inset 0 0 0 2px rgba(59, 134, 161, 0.4) !important;
+}
+
+.space-control-b {
+  background-color: rgba(176, 58, 46, 0.12) !important;
+  box-shadow: inset 0 0 0 2px rgba(176, 58, 46, 0.4) !important;
+}
+
+.space-control-both {
+  background-color: rgba(156, 39, 176, 0.1) !important;
+  box-shadow: inset 0 0 0 2px rgba(156, 39, 176, 0.4) !important;
+}
+
+/* Coordinates Labels Styling */
+.board-coord {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+  user-select: none;
+}
+
+.coord-num {
+  top: 4px;
+  left: 4px;
+}
+
+.coord-letter {
+  bottom: 4px;
+  right: 4px;
+}
+
+.light-sq .board-coord {
+  color: var(--board-dark);
+}
+
+.dark-sq .board-coord {
+  color: var(--board-light);
+}
+
+/* Sandbox Editor Choices Styling */
+.editor-choice {
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  aspect-ratio: 1;
+  cursor: pointer;
+  background-size: 80%;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: all 0.15s ease;
+}
+
+.editor-choice:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--gold);
+}
+
+.editor-choice.active-piece {
+  background-color: rgba(118, 150, 86, 0.25);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(118, 150, 86, 0.4);
+}

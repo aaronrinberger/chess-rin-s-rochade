@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premium Chess Workspace - Subscription Free</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <i data-lucide="crown"></i>
+        <div class="logo-text">ChessFree</div>
+      </div>
+      
+      <ul class="nav-menu">
+        <li class="nav-item active" data-view="play">
+          <button><i data-lucide="cpu"></i><span>Gegen Computer</span></button>
+        </li>
+        <li class="nav-item" data-view="puzzles">
+          <button><i data-lucide="puzzle"></i><span>Rätsel-Training</span></button>
+        </li>
+        <li class="nav-item" data-view="openings">
+          <button><i data-lucide="book-open"></i><span>Eröffnungen</span></button>
+        </li>
+        <li class="nav-item" data-view="endgames">
+          <button><i data-lucide="swords"></i><span>Endspiele</span></button>
+        </li>
+        <li class="nav-item" data-view="analysis">
+          <button><i data-lucide="bar-chart-2"></i><span>Analysebrett</span></button>
+        </li>
+        <li class="nav-item" data-view="online">
+          <button><i data-lucide="globe"></i><span>Online-Duell</span></button>
+        </li>
+        <li class="nav-item" data-view="coordinates">
+          <button><i data-lucide="target"></i><span>Koordinaten-Trainer</span></button>
+        </li>
+      </ul>
+      
+      <div class="sidebar-footer">
+        <button class="mute-btn" id="mute-toggle">
+          <i data-lucide="volume-2"></i>
+          <span>Ton an</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+      
+      <!-- VIEW: PLAY VS COMPUTER -->
+      <section id="view-play" class="view-container active">
+        <div class="board-area">
+          <div class="eval-bar-container" id="play-eval-bar">
+            <div class="eval-score-text score-white" id="play-score-w">50%</div>
+            <div class="eval-bar-white" style="height: 50%;"></div>
+            <div class="eval-score-text score-black" id="play-score-b">50%</div>
+          </div>
+          <div id="play-board"></div>
+        </div>
+        
+        <div class="control-panel">
+          <div class="panel-header">
+            <div class="panel-title"><i data-lucide="cpu"></i> Gegen Computer spielen</div>
+          </div>
+          <div class="panel-content">
+            <div>
+              <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Gegner / Deine Farbe:</label>
+              <div class="level-selector" id="play-color-select" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px;">
+                <div class="level-option active" data-color="w">Weiß</div>
+                <div class="level-option" data-color="b">Schwarz</div>
+                <div class="level-option" data-color="both">Beide</div>
+              </div>
+            </div>
+
+            <div id="play-bot-level-container">
+              <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Bot-Schwierigkeit:</label>
+              <div class="level-selector" id="bot-level-select" style="margin-bottom: 16px;">
+                <div class="level-option" data-level="1">1</div>
+                <div class="level-option" data-level="2">2</div>
+                <div class="level-option active" data-level="3">3</div>
+                <div class="level-option" data-level="4">4</div>
+                <div class="level-option" data-level="5">5</div>
+              </div>
+            </div>
+            
+            <div class="guide-box">
+              <strong>Spiele Schach & Lerne!</strong><br>
+              Wähle deinen Modus. Unter "Lernhilfen" kannst du taktische und strategische Analysenhilfen live dazuschalten.
+            </div>
+
+            <!-- Threat detection checkbox and visual aids -->
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px;"><i data-lucide="eye" style="color: var(--accent); width:16px;"></i> Lernhilfen</span>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="play-hints-toggle" style="accent-color: var(--accent);"> Bedrohungen anzeigen
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="play-threat-arrows-toggle" style="accent-color: var(--accent);"> Gegnerische Angriffslinien anzeigen
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="play-engine-moves-toggle" style="accent-color: var(--accent);"> Beste Züge anzeigen (Pfeil)
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="play-hanging-toggle" style="accent-color: var(--accent);"> Hängende (ungedeckte) Figuren markieren
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="play-space-toggle" style="accent-color: var(--accent);"> Raumkontrolle visualisieren
+              </label>
+            </div>
+
+            <!-- Best Move Explanation Box -->
+            <div id="play-move-explanation" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: none;">
+              <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; color: var(--gold);"><i data-lucide="info"></i> Empfehlungserklärung</div>
+              <div id="play-explanation-text" style="font-size: 13px; color: var(--text-muted); line-height: 1.4;"></div>
+            </div>
+
+            <!-- Keyboard Move Input (Console) -->
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-weight: 600; font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;"><i data-lucide="keyboard"></i> Tastatur-Zugeingabe</span>
+              <div style="display: flex; gap: 6px;">
+                <input type="text" id="play-keyboard-input" placeholder="z.B. e4, Nf3, e7e5..." style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); background-color: var(--bg-hover); color: var(--text-main); font-size: 13px;">
+                <button class="btn btn-primary" id="play-keyboard-submit" style="padding: 8px 12px;">Senden</button>
+              </div>
+              <div id="play-keyboard-feedback" style="font-size: 11px; color: var(--color-blunder); display: none;">Ungültiger Zug!</div>
+            </div>
+
+            <!-- Live Engine Analysis & WDL (Winning probability) -->
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-weight: 600; font-size: 13px; color: var(--accent); display: flex; align-items: center; gap: 6px;"><i data-lucide="gauge"></i> Live-Gewinnwahrscheinlichkeit</div>
+              
+              <!-- WDL Horizontal Bar -->
+              <div style="display: flex; height: 16px; border-radius: 4px; overflow: hidden; font-size: 9px; line-height: 16px; text-align: center; font-weight: 700; color: #111;" id="play-wdl-container">
+                <div id="play-wdl-w" style="background-color: var(--accent); width: 33%;">33% W</div>
+                <div id="play-wdl-d" style="background-color: #777; color: #fff; width: 34%;">34% R</div>
+                <div id="play-wdl-b" style="background-color: #333; color: #fff; width: 33%;">33% S</div>
+              </div>
+              <div id="play-wdl-text" style="font-size: 11px; color: var(--text-muted); text-align: center;">Weiß: 33% | Remis: 34% | Schwarz: 33%</div>
+
+              <!-- Top 3 Recommended Moves -->
+              <div style="border-top: 1px solid var(--border-light); padding-top: 6px; margin-top: 4px;">
+                <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Die 3 besten Züge (Stockfish):</div>
+                <div id="play-top-moves" style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="font-size: 12px; color: var(--text-muted); font-style: italic;">Berechne Stellungen...</div>
+                </div>
+              </div>
+            </div>
+
+            <div id="play-status-banner"></div>
+
+            <div class="move-history-container">
+              <div class="history-header">
+                <span>#</span><span>Weiß</span><span>Schwarz</span>
+              </div>
+              <div class="history-list" id="play-history-list"></div>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button class="btn btn-primary" id="play-restart" style="flex: 1;"><i data-lucide="refresh-cw"></i> Neu starten</button>
+            <button class="btn" id="play-flip" title="Brett drehen"><i data-lucide="rotate-cw"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: PUZZLES -->
+      <section id="view-puzzles" class="view-container">
+        <div class="board-area">
+          <div id="puzzles-board"></div>
+        </div>
+        
+        <div class="control-panel">
+          <div class="panel-header">
+            <div class="panel-title"><i data-lucide="puzzle"></i> Taktikrätsel</div>
+          </div>
+          <div class="panel-content">
+            <div class="rating-widget">
+              <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Deine Rätsel-Wertung</div>
+              <div class="rating-value" id="puzzle-rating">1000</div>
+            </div>
+
+            <div style="background-color: var(--bg-tertiary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-light);">
+              <h4 id="puzzle-title" style="font-weight: 600; margin-bottom: 6px;">Rätsel laden...</h4>
+              <p id="puzzle-desc" style="font-size: 13px; color: var(--text-muted); line-height: 1.4;"></p>
+            </div>
+
+            <div id="puzzle-feedback" class="game-state-banner" style="display: none;"></div>
+
+            <div class="cards-grid" id="puzzles-list">
+              <!-- Dynamically populated puzzles list -->
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button class="btn" id="puzzle-hint" style="flex: 1;"><i data-lucide="help-circle"></i> Tipp anzeigen</button>
+            <button class="btn btn-primary" id="puzzle-next" style="display: none; flex: 1;">Nächstes Rätsel <i data-lucide="arrow-right"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: OPENINGS -->
+      <section id="view-openings" class="view-container">
+        <div class="board-area">
+          <div id="openings-board"></div>
+        </div>
+        
+        <div class="control-panel">
+          <div class="panel-header">
+            <div class="panel-title"><i data-lucide="book-open"></i> Eröffnungen lernen</div>
+          </div>
+          <div class="panel-content">
+            <div id="opening-guide-box" class="guide-box" style="display: none;"></div>
+            
+            <div id="opening-feedback" class="game-state-banner" style="display: none;"></div>
+
+            <div class="cards-grid" id="openings-list">
+              <!-- Dynamically populated openings list -->
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button class="btn" id="opening-reset" style="display: none; flex: 1;"><i data-lucide="rotate-ccw"></i> Zurücksetzen</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: ENDGAMES -->
+      <section id="view-endgames" class="view-container">
+        <div class="board-area">
+          <div id="endgames-board"></div>
+        </div>
+        
+        <div class="control-panel">
+          <div class="panel-header">
+            <div class="panel-title"><i data-lucide="swords"></i> Endspiel-Trainer</div>
+          </div>
+          <div class="panel-content">
+            <div id="endgame-instruction-box" class="guide-box" style="display: none;"></div>
+
+            <div id="endgame-feedback" class="game-state-banner" style="display: none;"></div>
+
+            <div class="cards-grid" id="endgames-list">
+              <!-- Dynamically populated endgames list -->
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button class="btn" id="endgame-reset" style="display: none; flex: 1;"><i data-lucide="rotate-ccw"></i> Zurücksetzen</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: ANALYSIS -->
+      <section id="view-analysis" class="view-container">
+        <div class="board-area">
+          <div class="eval-bar-container" id="analysis-eval-bar">
+            <div class="eval-score-text score-white" id="analysis-score-w">50%</div>
+            <div class="eval-bar-white" style="height: 50%;"></div>
+            <div class="eval-score-text score-black" id="analysis-score-b">50%</div>
+          </div>
+          <div id="analysis-board"></div>
+        </div>
+        
+        <div class="control-panel">
+          <div class="panel-header">
+            <div class="panel-title"><i data-lucide="bar-chart-2"></i> Analyse & Bewertung</div>
+          </div>
+          <div class="panel-content">
+            
+            <!-- Paste FEN/PGN controls -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <input type="text" id="analysis-fen-input" placeholder="FEN eingeben..." style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-light); background-color: var(--bg-tertiary); color: var(--text-main); font-size: 13px;">
+              <button class="btn" id="analysis-load-fen" style="padding: 8px; font-size: 13px;"><i data-lucide="download"></i> FEN laden</button>
+            </div>
+
+            <div class="guide-box" style="font-size: 13px; line-height: 1.4;">
+              <strong>Freies Analysebrett:</strong><br>
+              Ziehe Figuren frei, um Stellungen zu analysieren. Der Computer bewertet jeden deiner Züge mit Chess.com-Kategorien (🌟 Best, ✅ Exzellent, ❓ Fehler).
+            </div>
+
+            <!-- Live Opening Explorer -->
+            <div id="analysis-explorer" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; color: var(--accent);"><i data-lucide="database"></i> Meister-Datenbank (Explorer)</div>
+              <div id="analysis-explorer-name" style="font-size: 13px; font-weight: 600; color: var(--text-main);">Ausgangsstellung</div>
+              <div style="display: flex; gap: 4px; font-size: 11px; height: 16px; border-radius: 4px; overflow: hidden; margin-top: 4px;" id="analysis-explorer-bar">
+                <div style="background-color: #f1f1f1; width: 40%; color: #111; text-align: center; line-height: 16px; font-weight: 700; font-size: 9px;" id="explorer-bar-w">40% W</div>
+                <div style="background-color: #777; width: 30%; color: #fff; text-align: center; line-height: 16px; font-weight: 700; font-size: 9px;" id="explorer-bar-d">30% R</div>
+                <div style="background-color: #333; width: 30%; color: #fff; text-align: center; line-height: 16px; font-weight: 700; font-size: 9px;" id="explorer-bar-b">30% S</div>
+              </div>
+              <div id="analysis-explorer-stats" style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 2px;">Aus 100.000 gespielten Meisterpartien</div>
+            </div>
+
+            <!-- Sandbox Editor Palette -->
+            <div id="analysis-editor-palette" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: none; flex-direction: column; gap: 8px;">
+              <div style="font-weight: 600; font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;"><i data-lucide="edit-3" style="color: var(--gold);"></i> Figur zum Platzieren wählen:</div>
+              <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;" id="editor-white-pieces">
+                <!-- JavaScript populated white pieces -->
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 4px;" id="editor-black-pieces">
+                <!-- JavaScript populated black pieces -->
+              </div>
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button class="btn" id="editor-clear-board" style="padding: 6px; font-size: 12px; flex: 1;"><i data-lucide="trash-2"></i> Leeren</button>
+                <button class="btn btn-primary" id="editor-done" style="padding: 6px; font-size: 12px; flex: 1;"><i data-lucide="check"></i> Fertig</button>
+              </div>
+            </div>
+
+            <!-- Retry Mistakes Wizard Panel -->
+            <div id="analysis-retry-panel" style="background-color: rgba(229, 184, 59, 0.1); border: 1px solid var(--gold); border-radius: 8px; padding: 12px; display: none; flex-direction: column; gap: 6px;">
+              <div style="font-weight: 600; font-size: 14px; color: var(--gold); display: flex; align-items: center; gap: 6px;"><i data-lucide="sparkles"></i> Fehler-Korrektur aktiv</div>
+              <div id="analysis-retry-text" style="font-size: 13px; line-height: 1.4; color: var(--text-main);">Finde den besten Zug für diese Stellung!</div>
+              <button class="btn" id="analysis-retry-next" style="padding: 6px; font-size: 12px; display: none; margin-top: 4px;">Nächster Fehler <i data-lucide="arrow-right"></i></button>
+            </div>
+
+            <!-- Current Move Explanation -->
+            <div id="analysis-move-explanation" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: none;">
+              <div id="analysis-explanation-title" style="font-weight: 600; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"></div>
+              <div id="analysis-explanation-desc" style="font-size: 13px; color: var(--text-muted); line-height: 1.4;"></div>
+            </div>
+
+            <!-- Keyboard Move Input (Console) -->
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-weight: 600; font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;"><i data-lucide="keyboard"></i> Tastatur-Zugeingabe</span>
+              <div style="display: flex; gap: 6px;">
+                <input type="text" id="analysis-keyboard-input" placeholder="z.B. e4, Nf3, e7e5..." style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); background-color: var(--bg-hover); color: var(--text-main); font-size: 13px;">
+                <button class="btn btn-primary" id="analysis-keyboard-submit" style="padding: 8px 12px;">Senden</button>
+              </div>
+              <div id="analysis-keyboard-feedback" style="font-size: 11px; color: var(--color-blunder); display: none;">Ungültiger Zug!</div>
+            </div>
+
+            <!-- Live Engine Analysis & WDL (Winning probability) -->
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-weight: 600; font-size: 13px; color: var(--accent); display: flex; align-items: center; gap: 6px;"><i data-lucide="gauge"></i> Live-Gewinnwahrscheinlichkeit</div>
+              
+              <!-- WDL Horizontal Bar -->
+              <div style="display: flex; height: 16px; border-radius: 4px; overflow: hidden; font-size: 9px; line-height: 16px; text-align: center; font-weight: 700; color: #111;" id="analysis-wdl-container">
+                <div id="analysis-wdl-w" style="background-color: var(--accent); width: 33%;">33% W</div>
+                <div id="analysis-wdl-d" style="background-color: #777; color: #fff; width: 34%;">34% R</div>
+                <div id="analysis-wdl-b" style="background-color: #333; color: #fff; width: 33%;">33% S</div>
+              </div>
+              <div id="analysis-wdl-text" style="font-size: 11px; color: var(--text-muted); text-align: center;">Weiß: 33% | Remis: 34% | Schwarz: 33%</div>
+
+              <!-- Top 3 Recommended Moves -->
+              <div style="border-top: 1px solid var(--border-light); padding-top: 6px; margin-top: 4px;">
+                <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Die 3 besten Züge (Stockfish):</div>
+                <div id="analysis-top-moves" style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="font-size: 12px; color: var(--text-muted); font-style: italic;">Berechne Stellungen...</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="move-history-container">
+              <div class="history-header">
+                <span>#</span><span>Weiß</span><span>Schwarz</span>
+              </div>
+              <div class="history-list" id="analysis-history-list"></div>
+            </div>
+          </div>
+          <div class="panel-footer" style="flex-wrap: wrap;">
+            <button class="btn btn-primary" id="analysis-reset" style="flex: 1; min-width: 90px;"><i data-lucide="refresh-cw"></i> Löschen</button>
+            <button class="btn" id="analysis-flip" title="Brett drehen"><i data-lucide="rotate-cw"></i></button>
+            <button class="btn" id="analysis-edit-toggle" style="flex: 1; min-width: 140px;"><i data-lucide="edit-3"></i> Stellung editieren</button>
+            <button class="btn" id="analysis-retry-btn" style="flex: 1; min-width: 140px; display: none; background-color: rgba(229, 184, 59, 0.15); border-color: var(--gold); color: var(--gold);"><i data-lucide="sparkles"></i> Fehler korrigieren</button>
+        </div>
+      </section>
+
+      <!-- VIEW: COORDINATES -->
+      <section id="view-coordinates" class="view-container">
+        <div class="board-area">
+          <div id="coord-board" style="pointer-events: auto;"></div>
+        </div>
+        
+        <div class="control-panel">
+          <div class="panel-header">
+            <div class="panel-title"><i data-lucide="target"></i> Koordinaten-Trainer</div>
+          </div>
+          <div class="panel-content">
+            <div class="rating-widget">
+              <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Beste Punktzahl</div>
+              <div class="rating-value" id="coord-highscore">0</div>
+            </div>
+
+            <div style="background-color: var(--bg-tertiary); padding: 20px; border-radius: 8px; border: 1px solid var(--border-light); text-align: center; display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size: 14px; color: var(--text-muted); font-weight: 500;">Finde das Feld:</div>
+              <div id="coord-target" style="font-size: 48px; font-weight: 700; color: var(--gold); line-height: 1;">--</div>
+              <div id="coord-timer" style="font-size: 16px; font-weight: 600; color: var(--text-muted);">Zeit verbleibend: 30s</div>
+              <div id="coord-score" style="font-size: 16px; font-weight: 600; color: var(--text-main);">Punkte: 0</div>
+            </div>
+
+            <div class="guide-box">
+              <strong>Spielanleitung:</strong><br>
+              Klicke so schnell wie möglich auf die gegnerische/eigene Koordinate auf dem leeren Schachbrett! Du hast 30 Sekunden Zeit.
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button class="btn btn-primary" id="coord-start" style="flex: 1;"><i data-lucide="play"></i> Trainer Starten</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: ONLINE DUELL -->
+      <section id="view-online" class="view-container">
+        <div class="board-area">
+          <div class="eval-bar-container" id="online-eval-bar">
+            <div class="eval-score-text score-white" id="online-score-w">50%</div>
+            <div class="eval-bar-white" style="height: 50%;"></div>
+            <div class="eval-score-text score-black" id="online-score-b">50%</div>
+          </div>
+          <div id="online-board"></div>
+        </div>
+        
+        <div class="control-panel">
+          <div class="panel-header">
+            <div class="panel-title"><i data-lucide="globe"></i> Online-Duell</div>
+          </div>
+          <div class="panel-content">
+            
+            <!-- Connection Status -->
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 13px; color: var(--text-muted);">Status: <span id="online-status" style="font-weight: 600;">Warte auf Verbindung...</span></div>
+              
+              <!-- Connection details -->
+              <div id="online-setup-box" style="display: flex; flex-direction: column; gap: 8px;">
+                <div>
+                  <label style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Deine Einladungs-ID:</label>
+                  <div style="display: flex; gap: 6px;">
+                    <div id="online-my-id" style="flex: 1; padding: 8px; border-radius: 6px; background-color: var(--bg-hover); font-weight: 700; font-size: 14px; text-align: center; border: 1px solid var(--border-light);">Lade ID...</div>
+                    <button class="btn" id="online-copy-id-btn" title="ID kopieren"><i data-lucide="copy" style="width: 16px;"></i></button>
+                  </div>
+                </div>
+                <div>
+                  <label style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Einladungs-Link:</label>
+                  <div style="display: flex; gap: 6px;">
+                    <input type="text" id="online-share-link" readonly style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); background-color: var(--bg-hover); color: var(--text-main); font-size: 11px;">
+                    <button class="btn btn-primary" id="online-copy-link-btn" style="padding: 8px;"><i data-lucide="share-2" style="width: 16px;"></i> Teilen</button>
+                  </div>
+                </div>
+                <div style="margin-top: 8px; border-top: 1px solid var(--border-light); padding-top: 8px;">
+                  <label style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Mit Bruder verbinden (Gegner-ID eingeben):</label>
+                  <div style="display: flex; gap: 6px;">
+                    <input type="text" id="online-target-id" placeholder="Gegner-ID hier eintragen..." style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); background-color: var(--bg-hover); color: var(--text-main); font-size: 13px;">
+                    <button class="btn btn-primary" id="online-connect-btn" style="padding: 8px 12px;"><i data-lucide="link"></i> Verbinden</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Analysis options in Online mode -->
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px;"><i data-lucide="eye" style="color: var(--accent); width:16px;"></i> Live-Analysehilfen</span>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="online-hints-toggle" style="accent-color: var(--accent);"> Bedrohungen anzeigen
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="online-engine-moves-toggle" style="accent-color: var(--accent);"> Beste Züge anzeigen (Pfeil)
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="online-sync-drawings" style="accent-color: var(--accent);" checked> Zeichnungen mit Bruder teilen (P2P Sync)
+              </label>
+            </div>
+
+            <div id="online-status-banner"></div>
+
+            <div class="move-history-container">
+              <div class="history-header">
+                <span>#</span><span>Weiß</span><span>Schwarz</span>
+              </div>
+              <div class="history-list" id="online-history-list"></div>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button class="btn btn-primary" id="online-restart" style="flex: 1; display: none;"><i data-lucide="refresh-cw"></i> Revanche fordern</button>
+            <button class="btn" id="online-analysis-btn" style="flex: 1; display: none; background-color: var(--gold); color: #111;"><i data-lucide="bar-chart-2"></i> Partie analysieren</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Promotion Selection Modal -->
+  <div class="modal-overlay" id="promotion-modal">
+    <div class="modal-content">
+      <div class="modal-title"><i data-lucide="arrow-up-circle" style="color: var(--gold);"></i> Bauernumwandlung</div>
+      <div class="modal-body">Wähle die Figur, in die dein Bauer umgewandelt werden soll:</div>
+      <div class="promotion-choices">
+        <button class="promotion-choice" data-piece="q" title="Dame" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg');"></button>
+        <button class="promotion-choice" data-piece="r" title="Turm" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg');"></button>
+        <button class="promotion-choice" data-piece="b" title="Läufer" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg');"></button>
+        <button class="promotion-choice" data-piece="n" title="Springer" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg');"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+  <script src="data/puzzles.js"></script>
+  <script src="data/openings.js"></script>
+  <script src="data/endgames.js"></script>
+  <script src="components/AudioSynth.js"></script>
+  <script src="components/Engine.js"></script>
+  <script src="components/Chessboard.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
