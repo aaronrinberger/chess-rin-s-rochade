@@ -14,6 +14,7 @@ class Chessboard {
   constructor(container, options = {}) {
     this.container = container;
     this.orientation = options.orientation || 'w';
+    this.playerColor = options.playerColor || null; // null = allow whoever's turn it is
     this.onMove = options.onMove || (() => {});
     this.game = options.game;
     
@@ -189,8 +190,10 @@ class Chessboard {
         }
 
         const piece = this.game.get(sq);
-        // Only select / drag player pieces whose turn it is
-        if (piece && piece.color === this.game.turn()) {
+        // Allow dragging only own pieces when playerColor is set (online mode),
+        // otherwise allow whoever's turn it is (local/analysis modes).
+        const allowedColor = this.playerColor || this.game.turn();
+        if (piece && piece.color === allowedColor && piece.color === this.game.turn()) {
           this.isDragging = true;
           this.draggedFromSquare = sq;
           this.draggedPiece = piece;

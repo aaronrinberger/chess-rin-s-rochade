@@ -2265,6 +2265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     activeBoard = new Chessboard(document.getElementById('online-board'), {
       orientation: onlineMyColor,
+      playerColor: onlineMyColor,
       game: activeGame,
       onMove: (from, to) => {
         handleOnlineMove(from, to);
