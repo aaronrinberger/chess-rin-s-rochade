@@ -963,7 +963,15 @@ document.addEventListener('DOMContentLoaded', () => {
     openingResetBtn.style.display = 'none';
     
     openingGuideBox.style.display = 'block';
-    openingGuideBox.innerHTML = `<strong>${opening.name}</strong><br>Bewege Weiß für den ersten Zug.`;
+    
+    const nextMove = opening.moves[openingMoveIndex];
+    const hint = nextMove ? `${nextMove.substring(0, 2)} → ${nextMove.substring(2, 4)}` : '';
+    
+    openingGuideBox.innerHTML = `
+      <strong>${opening.name}</strong><br>
+      Bewege Weiß für den ersten Zug.<br>
+      <span style="color: var(--gold); font-weight: 600; display: block; margin-top: 6px;">Tipp: Spiele ${hint}</span>
+    `;
     
     activeGame = new Chess();
     
@@ -974,6 +982,14 @@ document.addEventListener('DOMContentLoaded', () => {
         handleOpeningMove(from, to);
       }
     });
+
+    // Draw the visual hint arrow for the first move
+    if (nextMove) {
+      const fromSq = nextMove.substring(0, 2);
+      const toSq = nextMove.substring(2, 4);
+      activeBoard.aidArrows.push({ from: fromSq, to: toSq, color: 'blue' });
+      activeBoard.renderDrawings();
+    }
 
     renderOpeningsList();
   }
@@ -988,6 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
         audio.playMove();
         
         activeBoard.setLastMove(from, to);
+        activeBoard.clearDrawings();
         activeBoard.render();
         
         // Show explanation for the player's move
@@ -1016,11 +1033,26 @@ document.addEventListener('DOMContentLoaded', () => {
             activeBoard.render();
             
             // Show explanation for the opponent's move
-            openingGuideBox.innerHTML = `<strong>Gegner spielt: ${oppMove.san}</strong><br>${currentOpening.explanations[openingMoveIndex]}`;
+            let guideHTML = `<strong>Gegner spielt: ${oppMove.san}</strong><br>${currentOpening.explanations[openingMoveIndex]}`;
             openingMoveIndex++;
             
             if (openingMoveIndex >= currentOpening.moves.length) {
               showOpeningCompletion();
+            } else {
+              // It is the player's turn again! Display the next hint!
+              const nextPlayerMove = currentOpening.moves[openingMoveIndex];
+              const hint = nextPlayerMove ? `${nextPlayerMove.substring(0, 2)} → ${nextPlayerMove.substring(2, 4)}` : '';
+              guideHTML += `<br><span style="color: var(--gold); font-weight: 600; display: block; margin-top: 8px;">Dein nächster Zug: ${hint}</span>`;
+              openingGuideBox.innerHTML = guideHTML;
+              
+              // Draw the visual hint arrow
+              activeBoard.clearDrawings();
+              if (nextPlayerMove) {
+                const fromSq = nextPlayerMove.substring(0, 2);
+                const toSq = nextPlayerMove.substring(2, 4);
+                activeBoard.aidArrows.push({ from: fromSq, to: toSq, color: 'blue' });
+                activeBoard.renderDrawings();
+              }
             }
           }
         }, 800);
