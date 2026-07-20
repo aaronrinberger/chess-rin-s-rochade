@@ -217,6 +217,17 @@
             <div class="panel-title"><i data-lucide="book-open"></i> Eröffnungen lernen</div>
           </div>
           <div class="panel-content">
+            <!-- ELO Filter Bar for Openings -->
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 13px; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px;"><i data-lucide="filter" style="width:14px;"></i> Niveau filtern:</div>
+              <div class="level-selector" id="opening-elo-filter" style="grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                <div class="level-option active" data-filter="all" style="font-size: 11px; padding: 6px 0;">Alle</div>
+                <div class="level-option" data-filter="beginner" style="font-size: 11px; padding: 6px 0;">&lt; 1000</div>
+                <div class="level-option" data-filter="intermediate" style="font-size: 11px; padding: 6px 0;">1000-1300</div>
+                <div class="level-option" data-filter="expert" style="font-size: 11px; padding: 6px 0;">&gt; 1300</div>
+              </div>
+            </div>
+
             <div id="opening-guide-box" class="guide-box" style="display: none;"></div>
             
             <div id="opening-feedback" class="game-state-banner" style="display: none;"></div>

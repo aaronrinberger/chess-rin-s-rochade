@@ -905,15 +905,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------------------------------------------------------------
   let currentOpening = null;
   let openingMoveIndex = 0;
+  let openingFilter = 'all';
 
   const openingsListEl = document.getElementById('openings-list');
   const openingGuideBox = document.getElementById('opening-guide-box');
   const openingFeedbackEl = document.getElementById('opening-feedback');
   const openingResetBtn = document.getElementById('opening-reset');
+  const openingEloFilter = document.getElementById('opening-elo-filter');
 
   openingResetBtn.addEventListener('click', () => {
     if (currentOpening) selectOpening(currentOpening);
   });
+
+  if (openingEloFilter) {
+    openingEloFilter.querySelectorAll('.level-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        openingEloFilter.querySelectorAll('.level-option').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+        openingFilter = opt.dataset.filter;
+        renderOpeningsList();
+      });
+    });
+  }
 
   function initOpeningsMode() {
     renderOpeningsList();
@@ -925,7 +938,16 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderOpeningsList() {
     openingsListEl.innerHTML = '';
     const mastered = getProgress('chess_mastered_openings');
-    openings.forEach(o => {
+    
+    const filtered = openings.filter(o => {
+      if (openingFilter === 'all') return true;
+      if (openingFilter === 'beginner') return o.elo < 1000;
+      if (openingFilter === 'intermediate') return o.elo >= 1000 && o.elo <= 1300;
+      if (openingFilter === 'expert') return o.elo > 1300;
+      return true;
+    });
+
+    filtered.forEach(o => {
       const card = document.createElement('div');
       card.classList.add('training-card');
       if (currentOpening && currentOpening.id === o.id) {
@@ -933,9 +955,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       const isMastered = mastered.includes(o.id);
+      const eloTag = `<span class="badge-tag difficulty-green">${o.elo} ELO</span>`;
       const badgeHTML = isMastered
         ? `<span style="color: var(--accent); font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="check-circle-2" style="width:14px; height:14px;"></i> Gelernt</span>`
-        : `<span class="badge-tag difficulty-green">${o.difficulty}</span>`;
+        : eloTag;
       
       card.innerHTML = `
         <div class="card-details">
