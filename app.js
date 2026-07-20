@@ -2231,15 +2231,27 @@ document.addEventListener('DOMContentLoaded', () => {
     onlineStatusEl.textContent = `Verbinde mit Gegner...`;
     conn = peer.connect(targetId);
     isHost = false;
-    onlineMyColor = 'b';
+    // Color will be assigned by the host via color_assign message
     setupConnection();
   }
 
   function setupConnection() {
     conn.on('open', () => {
-      onlineStatusEl.innerHTML = `<span style="color: var(--accent); font-weight: 700;">✓ Spiel aktiv</span>`;
+      onlineStatusEl.innerHTML = `<span style="color: var(--accent); font-weight: 700;">✓ Verbunden – warte auf Farbzuweisung...</span>`;
       document.getElementById('online-setup-box').style.display = 'none';
-      startNewOnlineGame();
+      
+      if (isHost) {
+        // Host randomly assigns colors
+        const hostGetsWhite = Math.random() < 0.5;
+        onlineMyColor = hostGetsWhite ? 'w' : 'b';
+        const guestColor = hostGetsWhite ? 'b' : 'w';
+        conn.send({ type: 'color_assign', color: guestColor });
+        
+        const colorLabel = onlineMyColor === 'w' ? '♙ Weiß' : '♟ Schwarz';
+        onlineStatusEl.innerHTML = `<span style="color: var(--accent); font-weight: 700;">✓ Spiel aktiv – Du spielst ${colorLabel}</span>`;
+        startNewOnlineGame();
+      }
+      // Guest waits for color_assign message before starting
     });
     
     conn.on('data', (data) => {
@@ -2383,11 +2395,26 @@ document.addEventListener('DOMContentLoaded', () => {
       const accept = confirm('Dein Bruder fordert Revanche! Akzeptieren?');
       if (accept) {
         conn.send({ type: 'rematch_accept' });
+        // Re-randomize colors for rematch (host side)
+        if (isHost) {
+          const hostGetsWhite = Math.random() < 0.5;
+          onlineMyColor = hostGetsWhite ? 'w' : 'b';
+          conn.send({ type: 'color_assign', color: hostGetsWhite ? 'b' : 'w' });
+        }
         startNewOnlineGame();
       }
     }
-    else if (data.type === 'rematch_accept') {
+    else if (data.type === 'color_assign') {
+      // Guest receives their color assignment from the host
+      onlineMyColor = data.color;
+      const colorLabel = onlineMyColor === 'w' ? '♙ Weiß' : '♟ Schwarz';
+      onlineStatusEl.innerHTML = `<span style="color: var(--accent); font-weight: 700;">✓ Spiel aktiv – Du spielst ${colorLabel}</span>`;
       startNewOnlineGame();
+    }
+    else if (data.type === 'rematch_accept') {
+      // Host already sent color_assign above, just start for guest
+      if (!isHost) startNewOnlineGame();
+      else startNewOnlineGame();
     }
   }
 
