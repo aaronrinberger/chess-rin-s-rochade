@@ -723,6 +723,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentPuzzle = null;
   let puzzleMoveIndex = 0;
   let puzzleRating = parseInt(localStorage.getItem('puzzleRating') || '1000', 10);
+  let activePuzzleThemeFilter = 'all';
+  let activePuzzleEloFilter = 'all';
 
   const puzzleRatingEl = document.getElementById('puzzle-rating');
   const puzzleTitleEl = document.getElementById('puzzle-title');
@@ -731,6 +733,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const puzzlesListEl = document.getElementById('puzzles-list');
   const puzzleHintBtn = document.getElementById('puzzle-hint');
   const puzzleNextBtn = document.getElementById('puzzle-next');
+  const puzzleThemeFilter = document.getElementById('puzzle-theme-filter');
+  const puzzleEloFilter = document.getElementById('puzzle-elo-filter');
 
   puzzleRatingEl.textContent = puzzleRating;
 
@@ -750,17 +754,61 @@ document.addEventListener('DOMContentLoaded', () => {
     loadNextPuzzle();
   });
 
+  if (puzzleThemeFilter) {
+    puzzleThemeFilter.addEventListener('change', (e) => {
+      activePuzzleThemeFilter = e.target.value;
+      renderPuzzleList();
+    });
+  }
+
+  if (puzzleEloFilter) {
+    puzzleEloFilter.addEventListener('change', (e) => {
+      activePuzzleEloFilter = e.target.value;
+      renderPuzzleList();
+    });
+  }
+
   function initPuzzlesMode() {
     renderPuzzleList();
-    if (!currentPuzzle && puzzles.length > 0) {
-      selectPuzzle(puzzles[0]);
+    // Default select first available matching puzzle if any
+    const solved = getProgress('chess_solved_puzzles');
+    const matched = getFilteredPuzzles();
+    if (matched.length > 0) {
+      selectPuzzle(matched[0]);
     }
+  }
+
+  function getFilteredPuzzles() {
+    return puzzles.filter(p => {
+      // 1. Theme Filter
+      if (activePuzzleThemeFilter !== 'all') {
+        const theme = activePuzzleThemeFilter;
+        if (theme === 'Mate') {
+          const match = p.theme.toLowerCase().includes('mate') || p.theme === 'Back Rank' || p.theme.includes('Sacrifice');
+          if (!match) return false;
+        } else {
+          if (p.theme !== theme) return false;
+        }
+      }
+      
+      // 2. ELO Filter
+      if (activePuzzleEloFilter !== 'all') {
+        const elo = activePuzzleEloFilter;
+        if (elo === 'beginner' && p.difficulty >= 1000) return false;
+        if (elo === 'intermediate' && (p.difficulty < 1000 || p.difficulty > 1200)) return false;
+        if (elo === 'expert' && p.difficulty <= 1200) return false;
+      }
+      
+      return true;
+    });
   }
 
   function renderPuzzleList() {
     puzzlesListEl.innerHTML = '';
     const solved = getProgress('chess_solved_puzzles');
-    puzzles.forEach((p, idx) => {
+    const filtered = getFilteredPuzzles();
+
+    filtered.forEach((p, idx) => {
       const card = document.createElement('div');
       card.classList.add('training-card');
       if (currentPuzzle && currentPuzzle.id === p.id) {
@@ -892,12 +940,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function loadNextPuzzle() {
-    const nextIdx = puzzles.findIndex(p => p.id === currentPuzzle.id) + 1;
-    if (nextIdx < puzzles.length) {
-      selectPuzzle(puzzles[nextIdx]);
-    } else {
-      selectPuzzle(puzzles[0]); // Loop back to first
-    }
+    const filtered = getFilteredPuzzles();
+    if (filtered.length === 0) return;
+    const currentIdx = filtered.findIndex(p => p.id === currentPuzzle.id);
+    const nextIdx = (currentIdx + 1) % filtered.length;
+    selectPuzzle(filtered[nextIdx]);
   }
 
   // -------------------------------------------------------------

@@ -79,6 +79,56 @@ const puzzles = [
     labels: ["Qg8+", "Rxg8", "Nf7#"],
     theme: "Queen Sacrifice / Smothered Mate",
     difficulty: 1400
+  },
+  {
+    id: 9,
+    title: "Doppelangriff mit Springer (Fork)",
+    fen: "3r4/ppq2kpp/8/3N4/8/8/8/3R2K1 w - - 0 1",
+    description: "Gewinne die schwarze Dame durch einen Springer-Doppelangriff.",
+    moves: ["d5c7"],
+    labels: ["Nxc7"],
+    theme: "Fork",
+    difficulty: 1050
+  },
+  {
+    id: 10,
+    title: "Angriff auf gefesselte Figur (Pin)",
+    fen: "4k3/4q3/8/8/8/2B5/8/4R1K1 w - - 0 1",
+    description: "Nutze die Fesselung der schwarzen Dame auf der e-Linie aus und greife sie erneut an.",
+    moves: ["c3b4", "a7a5", "b4e7"],
+    labels: ["Bb4", "a5", "Bxe7"],
+    theme: "Pin",
+    difficulty: 900
+  },
+  {
+    id: 11,
+    title: "Ablenkung des Turms (Deflection)",
+    fen: "5rk1/5ppp/8/Q7/8/8/5PPP/3R2K1 w - - 0 1",
+    description: "Lenke den gegnerischen Turm ab, um ein Matt auf der Grundlinie einzuleiten.",
+    moves: ["a5d8", "f8d8", "d1d8"],
+    labels: ["Qd8", "Rxd8", "Rxd8#"],
+    theme: "Deflection",
+    difficulty: 1200
+  },
+  {
+    id: 12,
+    title: "Der Spieß-Angriff (Skewer)",
+    fen: "8/8/8/8/7q/8/k7/3R2K1 w - - 0 1",
+    description: "Setze den schwarzen König Schach und gewinne die dahinterstehende Dame.",
+    moves: ["d1d2+", "a2b3", "d2h2"],
+    labels: ["Rd2+", "Kb3", "Rxh2"],
+    theme: "Skewer",
+    difficulty: 900
+  },
+  {
+    id: 13,
+    title: "Mattdrohung (Arabisches Matt)",
+    fen: "6rk/7p/5N2/8/8/8/6PP/4R1K1 w - - 0 1",
+    description: "Bringe deinen Turm in Stellung, um ein unaufhaltsames Matt mit dem Springer einzuleiten.",
+    moves: ["e1e7", "g8f8", "e7h7"],
+    labels: ["Re7", "Rf8", "Rxh7#"],
+    theme: "Mate",
+    difficulty: 1250
   }
 ];
 

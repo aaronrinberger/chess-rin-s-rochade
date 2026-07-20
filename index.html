@@ -188,6 +188,28 @@
               <div class="rating-value" id="puzzle-rating">1000</div>
             </div>
 
+            <!-- Combined Tactic Filters -->
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 13px; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px;"><i data-lucide="filter" style="width:14px;"></i> Rätsel filtern:</div>
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px;">
+                <select id="puzzle-theme-filter" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); background-color: var(--bg-hover); color: var(--text-main); font-size: 13px; cursor: pointer; outline: none;">
+                  <option value="all">Alle Themen</option>
+                  <option value="Fork">Gabel (Fork)</option>
+                  <option value="Pin">Fesselung (Pin)</option>
+                  <option value="Skewer">Spieß (Skewer)</option>
+                  <option value="Deflection">Ablenkung (Deflection)</option>
+                  <option value="Discovered Attack">Abzugsschach</option>
+                  <option value="Mate">Matt-Motive</option>
+                </select>
+                <select id="puzzle-elo-filter" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); background-color: var(--bg-hover); color: var(--text-main); font-size: 13px; cursor: pointer; outline: none;">
+                  <option value="all">Alle ELOs</option>
+                  <option value="beginner">Anfänger (&lt; 1000)</option>
+                  <option value="intermediate">Mittel (1000-1200)</option>
+                  <option value="expert">Schwer (&gt; 1200)</option>
+                </select>
+              </div>
+            </div>
+
             <div style="background-color: var(--bg-tertiary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-light);">
               <h4 id="puzzle-title" style="font-weight: 600; margin-bottom: 6px;">Rätsel laden...</h4>
               <p id="puzzle-desc" style="font-size: 13px; color: var(--text-muted); line-height: 1.4;"></p>
