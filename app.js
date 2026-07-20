@@ -2116,8 +2116,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let isHost = false;
   let onlineMyColor = 'w';
   
-  let onlineHintsEnabled = false;
-  let onlineEngineMovesEnabled = false;
+  // Single master flag — both players are either ALL ON or ALL OFF
+  let onlineAidsEnabled = false;
   let onlineSyncDrawingsEnabled = true;
 
   const onlineStatusEl = document.getElementById('online-status');
@@ -2132,18 +2132,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const onlineRestartBtn = document.getElementById('online-restart');
   const onlineAnalysisBtn = document.getElementById('online-analysis-btn');
 
-  const onlineHintsToggle = document.getElementById('online-hints-toggle');
-  const onlineEngineMovesToggle = document.getElementById('online-engine-moves-toggle');
+  const onlineAidsMasterToggle = document.getElementById('online-aids-master-toggle');
+  const onlineAidsDetail = document.getElementById('online-aids-detail');
   const onlineSyncDrawings = document.getElementById('online-sync-drawings');
 
-  onlineHintsToggle.addEventListener('change', (e) => {
-    onlineHintsEnabled = e.target.checked;
-    updateOnlinePlayAids();
+  onlineAidsMasterToggle.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    applyOnlineAids(enabled);
+    // Sync to opponent
+    if (conn && conn.open) {
+      conn.send({ type: 'aids_sync', enabled });
+    }
   });
-  onlineEngineMovesToggle.addEventListener('change', (e) => {
-    onlineEngineMovesEnabled = e.target.checked;
+
+  function applyOnlineAids(enabled) {
+    onlineAidsEnabled = enabled;
+    onlineAidsMasterToggle.checked = enabled;
+    onlineAidsDetail.style.display = enabled ? 'flex' : 'none';
     updateOnlinePlayAids();
-  });
+  }
+
   onlineSyncDrawings.addEventListener('change', (e) => {
     onlineSyncDrawingsEnabled = e.target.checked;
   });
@@ -2366,6 +2374,10 @@ document.addEventListener('DOMContentLoaded', () => {
         activeBoard.renderDrawings();
       }
     }
+    else if (data.type === 'aids_sync') {
+      // Opponent toggled aids — force both sides to match
+      applyOnlineAids(data.enabled);
+    }
     else if (data.type === 'rematch_request') {
       const accept = confirm('Dein Bruder fordert Revanche! Akzeptieren?');
       if (accept) {
@@ -2400,39 +2412,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateOnlinePlayAids() {
     if (!activeBoard) return;
-    
+
     activeBoard.clearDrawings();
-    
-    if (onlineHintsEnabled) {
-      const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-      const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
-      const oppColor = activeGame.turn();
-      const myCol = oppColor === 'w' ? 'b' : 'w';
-      
-      files.forEach(f => {
-        ranks.forEach(r => {
-          const sq = f + r;
-          const piece = activeGame.get(sq);
-          if (piece && piece.color === myCol) {
-            if (activeGame.attacked(oppColor, sq)) {
-              activeBoard.drawings.circles[sq] = 'red';
-            }
-          }
-        });
-      });
+    activeBoard.hangingSquares = [];
+    activeBoard.spaceControl = {};
+
+    if (!onlineAidsEnabled) {
+      activeBoard.renderHighlights();
+      activeBoard.renderDrawings();
+      return;
     }
 
-    if (onlineEngineMovesEnabled && !activeGame.game_over()) {
+    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+    // 1. Threat markers (player's pieces attacked by opponent)
+    const oppColor = activeGame.turn();
+    const playerColor = oppColor === 'w' ? 'b' : 'w';
+    files.forEach(f => {
+      ranks.forEach(r => {
+        const sq = f + r;
+        const piece = activeGame.get(sq);
+        if (piece && piece.color === playerColor) {
+          if (activeGame.attacked(oppColor, sq)) {
+            activeBoard.drawings.circles[sq] = 'red';
+          }
+        }
+      });
+    });
+
+    // 2. Hanging (undefended) pieces
+    files.forEach(f => {
+      ranks.forEach(r => {
+        const sq = f + r;
+        const piece = activeGame.get(sq);
+        if (piece) {
+          const defended = isPieceDefended(activeGame, sq, piece.color);
+          const attacked = activeGame.attacked(oppColor, sq);
+          if (!defended && attacked) {
+            activeBoard.hangingSquares.push(sq);
+          }
+        }
+      });
+    });
+
+    // 3. Space control
+    const space = {};
+    files.forEach(f => {
+      ranks.forEach(r => {
+        const sq = f + r;
+        const wAttacks = activeGame.attacked('w', sq);
+        const bAttacks = activeGame.attacked('b', sq);
+        if (wAttacks && !bAttacks) space[sq] = 'w';
+        else if (bAttacks && !wAttacks) space[sq] = 'b';
+        else if (wAttacks && bAttacks) space[sq] = 'both';
+      });
+    });
+    activeBoard.spaceControl = space;
+
+    // 4. Opponent threat arrows
+    const tempGame = new Chess(activeGame.fen());
+    const tokens = tempGame.fen().split(' ');
+    tokens[1] = tokens[1] === 'w' ? 'b' : 'w';
+    const oppGame = new Chess(tokens.join(' '));
+    oppGame.moves({ verbose: true }).forEach(m => {
+      const target = activeGame.get(m.to);
+      if (target && target.color === activeGame.turn()) {
+        activeBoard.aidArrows.push({ from: m.from, to: m.to, color: 'red' });
+      }
+    });
+
+    // 5. Best engine move arrow
+    if (!activeGame.game_over()) {
       engine.getBestMove(activeGame.fen(), 4, true).then(bestMove => {
-        if (bestMove && onlineEngineMovesEnabled) {
-          const from = bestMove.substring(0, 2);
-          const to = bestMove.substring(2, 4);
-          activeBoard.aidArrows.push({ from, to, color: 'green' });
+        if (bestMove && onlineAidsEnabled) {
+          activeBoard.aidArrows.push({ from: bestMove.substring(0, 2), to: bestMove.substring(2, 4), color: 'green' });
           activeBoard.renderDrawings();
         }
       });
     }
-    
+
     activeBoard.renderHighlights();
     activeBoard.renderDrawings();
   }
