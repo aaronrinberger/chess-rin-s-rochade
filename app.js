@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Promotion handling state
   let pendingPromoMove = null; // { from, to, callback }
+  let botMoveTimeout = null; // Timeout reference for delayed computer moves
 
   // Initialize Lucide Icons
   lucide.createIcons();
@@ -30,6 +31,26 @@ document.addEventListener('DOMContentLoaded', () => {
       switchView(view);
     });
   });
+
+  // Board Theme Selector
+  const themeSelect = document.getElementById('board-theme-select');
+  if (themeSelect) {
+    const savedTheme = localStorage.getItem('chess_board_theme') || 'classic';
+    themeSelect.value = savedTheme;
+    
+    themeSelect.addEventListener('change', (e) => {
+      const theme = e.target.value;
+      localStorage.setItem('chess_board_theme', theme);
+      // Apply theme-walnut class to all containers on the page
+      document.querySelectorAll('.chessboard-container').forEach(el => {
+        if (theme === 'walnut') {
+          el.classList.add('theme-walnut');
+        } else {
+          el.classList.remove('theme-walnut');
+        }
+      });
+    });
+  }
 
   // Mute / Unmute Button
   const muteBtn = document.getElementById('mute-toggle');
@@ -55,6 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Terminate engine thinking
     engine.terminate();
+    
+    // Clear pending bot moves
+    if (botMoveTimeout) {
+      clearTimeout(botMoveTimeout);
+      botMoveTimeout = null;
+    }
     
     // Update navigation UI
     navItems.forEach(item => {
@@ -280,6 +307,12 @@ document.addEventListener('DOMContentLoaded', () => {
     playStatusBanner.style.display = 'none';
     playStatusBanner.innerHTML = '';
     
+    // Clear pending bot moves
+    if (botMoveTimeout) {
+      clearTimeout(botMoveTimeout);
+      botMoveTimeout = null;
+    }
+    
     updateEvalBar('play', 50, '0.0');
 
     const boardOrientation = playBotColor === 'w' ? 'b' : 'w';
@@ -350,41 +383,54 @@ document.addEventListener('DOMContentLoaded', () => {
     if (playBotColor === 'both') return; // Pass & play, no bot moves
     if (activeGame.turn() !== playBotColor) return; // Not bot's turn
 
+    // Clear any existing bot move timeout
+    if (botMoveTimeout) {
+      clearTimeout(botMoveTimeout);
+      botMoveTimeout = null;
+    }
+
+    const startTime = Date.now();
+
     // Show computing state or block inputs?
     engine.getBestMove(activeGame.fen(), playBotLevel).then(bestMove => {
       if (!bestMove) return;
       
-      const from = bestMove.substring(0, 2);
-      const to = bestMove.substring(2, 4);
-      const promo = bestMove.length > 4 ? bestMove.charAt(4) : undefined;
+      const elapsed = Date.now() - startTime;
+      const delay = Math.max(0, 2000 - elapsed);
       
-      const last = activeGame.get(to);
-      const move = activeGame.move({ from, to, promotion: promo });
-      
-      if (move) {
-        if (activeGame.in_check()) {
-          audio.playCheck();
-        } else if (move.flags.includes('k') || move.flags.includes('q')) {
-          audio.playCastle();
-        } else if (last || move.flags.includes('e')) {
-          audio.playCapture();
-        } else {
-          audio.playMove();
-        }
+      botMoveTimeout = setTimeout(() => {
+        const from = bestMove.substring(0, 2);
+        const to = bestMove.substring(2, 4);
+        const promo = bestMove.length > 4 ? bestMove.charAt(4) : undefined;
+        
+        const last = activeGame.get(to);
+        const move = activeGame.move({ from, to, promotion: promo });
+        
+        if (move) {
+          if (activeGame.in_check()) {
+            audio.playCheck();
+          } else if (move.flags.includes('k') || move.flags.includes('q')) {
+            audio.playCastle();
+          } else if (last || move.flags.includes('e')) {
+            audio.playCapture();
+          } else {
+            audio.playMove();
+          }
 
-        activeBoard.setLastMove(from, to);
-        activeBoard.setCheckSquare(activeGame.in_check() ? getKingSquare(activeGame, activeGame.turn()) : null);
-        activeBoard.render();
-        
-        addMoveToHistory(move.san);
-        renderMoveHistory(playHistoryList);
-        
-        checkGameStatus(playStatusBanner);
-        updatePlayAids();
-        
-        // Calculate evaluation
-        triggerPositionEval('play');
-      }
+          activeBoard.setLastMove(from, to);
+          activeBoard.setCheckSquare(activeGame.in_check() ? getKingSquare(activeGame, activeGame.turn()) : null);
+          activeBoard.render();
+          
+          addMoveToHistory(move.san);
+          renderMoveHistory(playHistoryList);
+          
+          checkGameStatus(playStatusBanner);
+          updatePlayAids();
+          
+          // Calculate evaluation
+          triggerPositionEval('play');
+        }
+      }, delay);
     });
   }
 
@@ -650,7 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Best engine move markers and explanation
     playMoveExplanation.style.display = 'none';
     if (bestMoveMarkersEnabled && !activeGame.game_over()) {
-      engine.getBestMove(activeGame.fen(), 5).then(bestMove => {
+      engine.getBestMove(activeGame.fen(), 5, true).then(bestMove => {
         if (bestMove && bestMoveMarkersEnabled) {
           const from = bestMove.substring(0, 2);
           const to = bestMove.substring(2, 4);
@@ -2275,7 +2321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (onlineEngineMovesEnabled && !activeGame.game_over()) {
-      engine.getBestMove(activeGame.fen(), 4).then(bestMove => {
+      engine.getBestMove(activeGame.fen(), 4, true).then(bestMove => {
         if (bestMove && onlineEngineMovesEnabled) {
           const from = bestMove.substring(0, 2);
           const to = bestMove.substring(2, 4);

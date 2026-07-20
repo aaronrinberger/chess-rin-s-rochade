@@ -73,6 +73,14 @@ class Chessboard {
     this.container.innerHTML = '';
     this.container.classList.add('chessboard-container');
     
+    // Apply board design theme from localStorage automatically
+    const savedTheme = localStorage.getItem('chess_board_theme') || 'classic';
+    if (savedTheme === 'walnut') {
+      this.container.classList.add('theme-walnut');
+    } else {
+      this.container.classList.remove('theme-walnut');
+    }
+    
     // Create the board grid
     this.boardEl = document.createElement('div');
     this.boardEl.classList.add('chessboard-grid');

@@ -868,3 +868,9 @@ body {
   border-color: var(--accent);
   box-shadow: 0 0 8px rgba(118, 150, 86, 0.4);
 }
+
+/* Walnut board theme */
+.chessboard-container.theme-walnut {
+  --board-light: #e1cbb1; /* Elegant light birch/walnut sapwood */
+  --board-dark: #7a4b2a;  /* Rich dark walnut heartwood */
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Premium Chess Workspace - Subscription Free</title>
+  <title>RIN's Rochade</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
     <aside class="sidebar">
       <div class="logo-container">
         <i data-lucide="crown"></i>
-        <div class="logo-text">ChessFree</div>
+        <div class="logo-text">RIN's Rochade</div>
       </div>
       
       <ul class="nav-menu">
@@ -40,8 +40,15 @@
         </li>
       </ul>
       
-      <div class="sidebar-footer">
-        <button class="mute-btn" id="mute-toggle">
+      <div class="sidebar-footer" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+          <label style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Brett-Design:</label>
+          <select id="board-theme-select" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); background-color: var(--bg-hover); color: var(--text-main); font-size: 13px; cursor: pointer; outline: none;">
+            <option value="classic">Klassisch (Grün)</option>
+            <option value="walnut">Walnuss (Holz)</option>
+          </select>
+        </div>
+        <button class="mute-btn" id="mute-toggle" style="width: 100%;">
           <i data-lucide="volume-2"></i>
           <span>Ton an</span>
         </button>

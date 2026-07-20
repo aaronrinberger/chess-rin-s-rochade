@@ -5,10 +5,14 @@
  */
 class ChessEngine {
   constructor() {
-    this.worker = null;
     this.stockfishUrl = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js';
     this.isStockfishReady = false;
     this.pendingCallbacks = {};
+    
+    this.botWorker = null;
+    this.evalWorker = null;
+    this.hintWorker = null;
+    
     this.fallbackEngine = new LocalMinimaxEngine();
     
     this.initStockfish();
@@ -20,28 +24,41 @@ class ChessEngine {
       const response = await fetch(this.stockfishUrl);
       if (!response.ok) throw new Error('Stockfish fetch failed');
       const scriptCode = await response.text();
-      const blob = new Blob([scriptCode], { type: 'application/javascript' });
+      
+      // Inject locateFile configuration to force Emscripten to fetch the WASM binary from the CDN
+      const locateFileSnippet = `self.Module = { locateFile: function(path) { if (path.endsWith('.wasm')) { return 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/' + path; } return path; } };\n`;
+      const blob = new Blob([locateFileSnippet + scriptCode], { type: 'application/javascript' });
       const workerUrl = URL.createObjectURL(blob);
       
-      this.worker = new Worker(workerUrl);
-      this.worker.onmessage = (event) => this.handleWorkerMessage(event.data);
+      this.botWorker = new Worker(workerUrl);
+      this.evalWorker = new Worker(workerUrl);
+      this.hintWorker = new Worker(workerUrl);
+      
+      this.botWorker.onmessage = (event) => this.handleWorkerMessage('bot', event.data);
+      this.evalWorker.onmessage = (event) => this.handleWorkerMessage('eval', event.data);
+      this.hintWorker.onmessage = (event) => this.handleWorkerMessage('hint', event.data);
       
       // Initialize UCI mode
-      this.worker.postMessage('uci');
-      this.worker.postMessage('setoption name MultiPV value 3');
+      this.botWorker.postMessage('uci');
+      
+      this.evalWorker.postMessage('uci');
+      this.evalWorker.postMessage('setoption name MultiPV value 3');
+      
+      this.hintWorker.postMessage('uci');
+      
       this.isStockfishReady = true;
-      console.log('Stockfish.js initialized successfully.');
+      console.log('Stockfish.js initialized successfully with three separate workers.');
     } catch (error) {
-      console.warn('Could not initialize Stockfish Web Worker. Falling back to local Minimax engine.', error);
+      console.warn('Could not initialize Stockfish Web Workers. Falling back to local Minimax engine.', error);
       this.isStockfishReady = false;
     }
   }
 
-  handleWorkerMessage(line) {
-    // console.log("Stockfish:", line);
+  handleWorkerMessage(workerType, line) {
+    // console.log(`Stockfish [${workerType}]:`, line);
     
     // Parse MultiPV lines
-    if (line.includes('info') && line.includes('multipv')) {
+    if (workerType === 'eval' && line.includes('info') && line.includes('multipv')) {
       const parts = line.split(' ');
       const mpvIndex = parts.indexOf('multipv');
       const scoreIndex = parts.indexOf('score');
@@ -65,7 +82,7 @@ class ChessEngine {
     }
     
     // Parse evaluation score
-    if (line.includes('info') && line.includes('score')) {
+    if (workerType === 'eval' && line.includes('info') && line.includes('score')) {
       let scoreType = 'cp';
       let scoreValue = 0;
       
@@ -87,13 +104,21 @@ class ChessEngine {
       const parts = line.split(' ');
       const move = parts[1];
       
-      if (this.pendingCallbacks.move) {
-        this.pendingCallbacks.move.resolve(move);
-        delete this.pendingCallbacks.move;
-      }
-      if (this.pendingCallbacks.eval) {
-        this.pendingCallbacks.eval.resolve();
-        delete this.pendingCallbacks.eval;
+      if (workerType === 'bot') {
+        if (this.pendingCallbacks.botMove) {
+          this.pendingCallbacks.botMove.resolve(move);
+          delete this.pendingCallbacks.botMove;
+        }
+      } else if (workerType === 'hint') {
+        if (this.pendingCallbacks.hintMove) {
+          this.pendingCallbacks.hintMove.resolve(move);
+          delete this.pendingCallbacks.hintMove;
+        }
+      } else if (workerType === 'eval') {
+        if (this.pendingCallbacks.eval) {
+          this.pendingCallbacks.eval.resolve();
+          delete this.pendingCallbacks.eval;
+        }
       }
     }
   }
@@ -120,8 +145,9 @@ class ChessEngine {
         resolve: () => resolve(latestScore)
       };
 
-      this.worker.postMessage(`position fen ${fen}`);
-      this.worker.postMessage(`go depth ${depth}`);
+      this.evalWorker.postMessage('stop');
+      this.evalWorker.postMessage(`position fen ${fen}`);
+      this.evalWorker.postMessage(`go depth ${depth}`);
     });
   }
 
@@ -130,16 +156,18 @@ class ChessEngine {
    * Levels 1 to 5 correspond to different chess strengths (800 to 2200 ELO).
    * @param {string} fen - FEN string of the position
    * @param {number} level - Bot difficulty (1 to 5)
+   * @param {boolean} isHint - Whether this is a visual engine hint or the actual bot moving
    * @returns {Promise<string>}
    */
-  getBestMove(fen, level = 3) {
+  getBestMove(fen, level = 3, isHint = false) {
     // Determine depth and random play variance based on bot level
     const depthMap = { 1: 1, 2: 3, 3: 5, 4: 8, 5: 12 };
     const depth = depthMap[level] || 5;
 
     // Level 1-2 often play random moves if Stockfish isn't used
     if (!this.isStockfishReady) {
-      return Promise.resolve(this.fallbackEngine.getBestMove(fen, depth, level));
+      const fallbackDepth = Math.min(depth, 3); // Cap depth at 3 to prevent browser freezing
+      return Promise.resolve(this.fallbackEngine.getBestMove(fen, fallbackDepth, level));
     }
 
     return new Promise((resolve) => {
@@ -165,20 +193,25 @@ class ChessEngine {
         }
       }
 
-      this.pendingCallbacks.move = { resolve };
-      this.worker.postMessage(`position fen ${fen}`);
+      const worker = isHint ? this.hintWorker : this.botWorker;
+      const callbackKey = isHint ? 'hintMove' : 'botMove';
+
+      this.pendingCallbacks[callbackKey] = { resolve };
+      
+      worker.postMessage('stop');
+      worker.postMessage(`position fen ${fen}`);
       
       // Stockfish skill level adjustment (UCI option)
       const skillLevel = (level - 1) * 5; // Level 1 -> Skill 0, Level 5 -> Skill 20
-      this.worker.postMessage(`setoption name Skill Level value ${skillLevel}`);
-      this.worker.postMessage(`go depth ${depth}`);
+      worker.postMessage(`setoption name Skill Level value ${skillLevel}`);
+      worker.postMessage(`go depth ${depth}`);
     });
   }
 
   terminate() {
-    if (this.worker) {
-      this.worker.postMessage('stop');
-    }
+    if (this.botWorker) this.botWorker.postMessage('stop');
+    if (this.evalWorker) this.evalWorker.postMessage('stop');
+    if (this.hintWorker) this.hintWorker.postMessage('stop');
     this.pendingCallbacks = {};
   }
 }
